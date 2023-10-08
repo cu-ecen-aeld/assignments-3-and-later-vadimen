@@ -1,4 +1,10 @@
 #include "systemcalls.h"
+#include <stdio.h>     //: For standard I/O functions like perror.
+#include <stdlib.h>    //: For functions like abort and exit.
+#include <unistd.h>    //: For functions like fork, dup2, and close.
+#include <sys/types.h> //: For data types like pid_t.
+#include <sys/wait.h>  //: For functions like waitpid.
+#include <fcntl.h>     //: For file operations like open.
 
 /**
  * @param cmd the command to execute with system()
@@ -78,7 +84,7 @@ bool do_exec(int count, ...)
     if(status)
 	return -1;//some problem with child process
     else if (WIFEXITED (status))
-	return WEXITSTATUS (status)
+	return WEXITSTATUS (status);
 
     va_end(args);
 
