@@ -16,7 +16,8 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-
+    int res = system(cmd);
+    if(res == -1) return false;
     return true;
 }
 
@@ -59,6 +60,26 @@ bool do_exec(int count, ...)
  *
 */
 
+    int status; 
+    int pid;
+
+    pid = fork();
+
+    if(pid == -1)
+ 	return -1;
+    else if(pid == 0){//we are in child process
+	execv(command[0], command+1);
+	exit(-1);//if execv is successfull this line does not execute	
+    }
+
+    if(waitpid(pid, &status, -1) == -1)
+	return -1;
+
+    if(status)
+	return -1;//some problem with child process
+    else if (WIFEXITED (status))
+	return WEXITSTATUS (status)
+
     va_end(args);
 
     return true;
@@ -92,6 +113,22 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
+    int kidpid;
+    int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
+    if(fd<0) return -1;
+
+    switch(kidpid = fork()){
+	case -1: 
+		return -1;
+        case 0:
+		if (dup2(fd, 1) < 0) {return -1;}
+    		close(fd);
+    		//execvp(cmd, args); perror("execvp"); abort();
+ 	default:
+		close(fd);
+		execvp(command[0], command+1);
+    		/* do whatever the parent wants to do. */
+    }
 
     va_end(args);
 
